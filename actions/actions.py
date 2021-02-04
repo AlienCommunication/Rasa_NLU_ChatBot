@@ -3,10 +3,18 @@ from typing import Any, Text, Dict,Union, List ## Datatypes
 from rasa_sdk import Action, Tracker  ##
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.forms import FormAction
-from rasa_sdk.events import SlotSet
+from rasa_sdk.events import SlotSet, UserUtteranceReverted, ActionReverted, FollowupAction
 
 
 import re
+
+import MySQLdb
+
+hostname = "35.225.55.69"
+username = "rasa_User"
+password = "password12"
+database = "shopping_db"
+
 
 class ActionSearch(Action):
 
@@ -41,7 +49,20 @@ class ActionShowLatestNews(Action):
         #calling an API
         # do anything
         #all caluculations are done
-        dispatcher.utter_message(text='Here the latest news for your category')
+        db = MySQLdb.connect(hostname,username,password,database)
+        cursor = db.cursor()
+        category = tracker.get_slot('category')
+        if category == 'phone':
+            cursor.execute("SELECT blog_url FROM news WHERE category=%s LIMIT 3",['phone'])
+        elif category == 'laptop':
+            cursor.execute("SELECT blog_url FROM news WHERE category=%s LIMIT 3",['laptop'])
+        news = cursor.fetchall()
+        if len(news) != 0:
+            for x in news:
+                dispatcher.utter_message(text=x[0])
+        else:
+            dispatcher.utter_message(text='Looks like there isnt any news available.')
+
         dispatcher.utter_message(template='utter_select_next')
         return []
 
@@ -230,11 +251,36 @@ class ProductSearchForm(FormAction):
     ) -> List[Dict]:
 
         if tracker.get_slot('category') == 'phone':
-            dispatcher.utter_message(text="Please find your searched items here......... Phones..")
+            dispatcher.utter_message(text="Please find your searched items here: Phones..")
 
         elif tracker.get_slot('category') == 'laptop':
-            dispatcher.utter_message(text="Please find your searched items here......... Laptops..")
+            dispatcher.utter_message(text="Please find your searched items here: Laptops..")
+        category = tracker.get_slot('category')
+        #Open a database connection
+        db = MySQLdb.connect(hostname,username,password,database)
+        ram = tracker.get_slot('ram')
+        battery = tracker.get_slot('battery')
+        battery_backup = tracker.get_slot('battery_backup')
+        storage_capacity = tracker.get_slot('storage_capacity')
+        camera = tracker.get_slot('camera')
+        budget = tracker.get_slot('budget')
 
+        #prepare a cursor object
+        cursor = db.cursor()
+        if category == 'phone':
+            cursor.execute("SELECT product_url FROM products WHERE ram >= %s AND back_camera_megapixel >= %s AND \
+                battery_mah >= %s AND price_usd <= %s AND category= %s", [int(ram),\
+                int(camera), int(battery), int(budget), 'phone'])
+        elif category == 'laptop':
+            cursor.execute("SELECT product_url FROM products WHERE ram >= %s AND storage >= %s AND \
+                battery_backup >= %s AND price_usd <= %s AND category= %s", [int(ram),\
+                int(storage), int(battery_backup), int(budget), 'laptop'])
+        products = cursor.fetchall()
+        if len(products) != 0:
+            for x in products:
+                dispatcher.utter_message(text=x[0])
+        else:
+            dispatcher.utter_message(text="Looks like there aren't any products that match your search.")       
         dispatcher.utter_message(template='utter_select_next')
 
         return [SlotSet('ram',None),SlotSet('camera',None),SlotSet('battery_backup',None),\
@@ -248,11 +294,23 @@ class MyFallback(Action):
     def run(self, dispatcher: CollectingDispatcher,
         tracker: Tracker,
         domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        #Calling the DB
-        #calling an API
-        # do anything
-        #all caluculations are done
+
         dispatcher.utter_message(template="utter_fallback")
 
         return []
 
+class YourResidence(Action):
+
+    def name(self) -> Text:
+        return "action_your_residence"
+
+    def run(self, dispatcher: CollectingDispatcher,
+        tracker: Tracker,
+        domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        #Calling the DB
+        #calling an API
+        # do anything
+        #all caluculations are done
+        dispatcher.utter_message(template="utter_residence")
+
+        return [UserUtteranceReverted(),FollowupAction(tracker.active_form.get('name'))]

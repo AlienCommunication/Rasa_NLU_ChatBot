@@ -5,12 +5,12 @@ intents:
 - greet
 - buy_phone_laptop
 - latest_news_phones_laptops
+- ask_residence:
+    triggers: action_your_residence
 - give_information
 - goodbye
 - budget_available
 - out_of_scope
-- ask_occupation:
-    triggers: action_your_occupation
 entities:
 - category
 slots:
@@ -86,6 +86,10 @@ responses:
     - payload: /goodbye
       title: Goodbye
     text: Please select what you want to do next.
+  utter_residence:
+  - text: I live in this app all day long.
+  - text: The virtual world is my playground. I'm always here.
+  - text: Right here in this app. Whenever you need me.
 actions:
 - utter_how_can_I_help
 - utter_ask_ram
@@ -105,7 +109,8 @@ actions:
 - utter_wrong_storage_capacity
 - utter_fallback
 - action_my_fallback
-- action_your_occupation
 - utter_select_next
+- action_your_residence
+- utter_residence
 forms:
 - product_search_form

@@ -23,10 +23,20 @@
 - show me a good [air conditioner](category)
 - please recommend me a [washing machine](category)
 
-## intent:ask_occupation
-- whats your occupation?
-- what do you do?
-- where do you work?
+## intent:ask_residence
+- where do you live
+- in which city do you live
+- whats your residence
+- wheres your home
+- wheres your house
+- your city 
+- your town
+- whats your hometown
+- where do you stay
+- where's your residence
+- what is your city
+- where are you staying
+- wer do u stay
 
 ## intent:latest_news_phones_laptops
 - Whats the latest news with [phones](category)
